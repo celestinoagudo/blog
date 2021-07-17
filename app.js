@@ -1,7 +1,7 @@
 const express = require("express");
 const ejs = require("ejs");
-const _ = require('lodash');
-const mongoose = require('mongoose');
+const _ = require("lodash");
+const mongoose = require("mongoose");
 
 const projectHelper = require(`${__dirname}/helper.js`);
 const app = express();
@@ -10,37 +10,39 @@ const connectionString = `mongodb+srv://admin-celestino:mong0DBcelestin0asaDM@cl
 mongoose.connect(connectionString, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  useFindAndModify: false
+  useFindAndModify: false,
 });
 
 const blogSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: [true, "No Title Specified"]
+    required: [true, "No Title Specified"],
   },
   post: {
     type: String,
-    required: [true, "No Post Specified"]
-  }
+    required: [true, "No Post Specified"],
+  },
 });
 
 const Blog = mongoose.model("Blog", blogSchema);
 
-
-app.set('view engine', 'ejs').use(express.urlencoded({
-  extended: true
-})).use(express.static("public"));
-
+app
+  .set("view engine", "ejs")
+  .use(
+    express.urlencoded({
+      extended: true,
+    })
+  )
+  .use(express.static("public"));
 
 app.get("/", (request, response) => {
-
   Blog.find({}, (error, blogs) => {
     if (error) {
       console.log(`An error is encountered while fetching blogs: ${error}`);
     } else {
       response.render("home", {
         startingText: projectHelper.getHomeStartingText(),
-        posts: blogs
+        posts: blogs,
       });
     }
   });
@@ -48,13 +50,13 @@ app.get("/", (request, response) => {
 
 app.get("/about", (request, response) => {
   response.render("about", {
-    startingText: projectHelper.getAboutStartingText()
+    startingText: projectHelper.getAboutStartingText(),
   });
 });
 
 app.get("/contact", (request, response) => {
   response.render("contact", {
-    startingText: projectHelper.getContactStartingText()
+    startingText: projectHelper.getContactStartingText(),
   });
 });
 
@@ -63,7 +65,7 @@ app.get("/compose", (request, response) => {
 });
 
 app.get("/posts/:post", (request, response) => {
-  let postParam = request.params.post
+  let postParam = request.params.post;
 
   Blog.find({}, (error, blogs) => {
     if (error) {
@@ -72,7 +74,7 @@ app.get("/posts/:post", (request, response) => {
       blogs.forEach((blog) => {
         if (_.lowerCase(blog.title) === _.lowerCase(postParam)) {
           response.render("post", {
-            postParam: blog
+            postParam: blog,
           });
         }
       });
@@ -88,28 +90,42 @@ app.post("/compose", (request, response) => {
 
   const blog = Blog({
     title: request.body.composeTitle,
-    post: request.body.composePost
+    post: request.body.composePost,
   });
 
-  Blog.findOne({
-    title: post.title
-  }, (error, existingBlog) => {
-    if (error) {
-      console.log(`An error is encountered while finding document with title '${post.title}': + ${getValidationErrorMessage(error)}`);
-      response.redirect("/");
-    } else if (existingBlog) {
-      console.log(`Blog's title is already used.`);
-      response.redirect("/");
-    } else {
-      blog.save().then((newBlogSaved) => {
-        console.log(`Successfully saved a new blog with title '${newBlogSaved.title}'`);
+  Blog.findOne(
+    {
+      title: post.title,
+    },
+    (error, existingBlog) => {
+      if (error) {
+        console.log(
+          `An error is encountered while finding document with title '${
+            post.title
+          }': + ${getValidationErrorMessage(error)}`
+        );
         response.redirect("/");
-      }).catch((saveError) => {
-        console.log(`An error is encountered while saving the blog: ${saveError}`);
+      } else if (existingBlog) {
+        console.log(`Blog's title is already used.`);
         response.redirect("/");
-      });
+      } else {
+        blog
+          .save()
+          .then((newBlogSaved) => {
+            console.log(
+              `Successfully saved a new blog with title '${newBlogSaved.title}'`
+            );
+            response.redirect("/");
+          })
+          .catch((saveError) => {
+            console.log(
+              `An error is encountered while saving the blog: ${saveError}`
+            );
+            response.redirect("/");
+          });
+      }
     }
-  });
+  );
 });
 
 /**
@@ -119,10 +135,10 @@ app.post("/compose", (request, response) => {
  */
 function getValidationErrorMessage(validationError) {
   let validationErrorMessage = "";
-  if (validationError.name == 'ValidationError') {
+  if (validationError.name == "ValidationError") {
     for (field in validationError.errors) {
       console.log(field);
-      validationErrorMessage += (validationError.errors[field].message);
+      validationErrorMessage += validationError.errors[field].message;
     }
   }
   return validationErrorMessage;
